@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Aura</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#17171a">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Aura">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-alt: #f5f5f4;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --text-muted: #6b6b68;
+    --text-faint: #9a9a96;
+    --border: #e4e3df;
+    --accent: #7f77dd;
+    --accent-text: #3c3489;
+    --accent-bg: #eeedfe;
+    --success-bg: #e1f5ee;
+    --success-text: #085041;
+    --danger: #d85a30;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17171a;
+      --bg-alt: #1f1f23;
+      --card: #232327;
+      --text: #f0f0ee;
+      --text-muted: #a3a3a0;
+      --text-faint: #77776f;
+      --border: #333336;
+      --accent: #a7a1ee;
+      --accent-text: #cecbf6;
+      --accent-bg: #3c3489;
+      --success-bg: #04342c;
+      --success-text: #9fe1cb;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17171a;
+    --bg-alt: #1f1f23;
+    --card: #232327;
+    --text: #f0f0ee;
+    --text-muted: #a3a3a0;
+    --text-faint: #77776f;
+    --border: #333336;
+    --accent: #a7a1ee;
+    --accent-text: #cecbf6;
+    --accent-bg: #3c3489;
+    --success-bg: #04342c;
+    --success-text: #9fe1cb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh;
+    overscroll-behavior-y: contain;
+  }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+  .screen { display: none; flex: 1; flex-direction: column; padding: 20px 18px 90px; }
+  .screen.active { display: flex; }
+  h1 { font-size: 26px; font-weight: 600; margin: 8px 0 4px; }
+  h2 { font-size: 19px; font-weight: 600; margin: 0 0 6px; }
+  p.sub { color: var(--text-muted); font-size: 14px; margin: 0 0 24px; line-height: 1.5; }
+  input, textarea {
+    width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--bg-alt); color: var(--text); font-size: 15px; margin-bottom: 12px; font-family: inherit;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  button {
+    width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--accent);
+    color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 4px;
+  }
+  button:disabled { opacity: 0.5; }
+  button.ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  button.small { width: auto; padding: 8px 16px; font-size: 13px; }
+  .error { color: var(--danger); font-size: 13px; margin: -6px 0 10px; display: none; }
+  .error.show { display: block; }
+  .center-screen { justify-content: center; align-items: center; text-align: center; }
+  .logo { font-size: 34px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .divider { display: flex; align-items: center; gap: 10px; margin: 18px 0; color: var(--text-faint); font-size: 12px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  header.top {
+    position: sticky; top: 0; background: var(--bg); z-index: 5;
+    padding: 16px 18px 12px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header.top .titlewrap p { margin: 0; font-size: 12px; color: var(--text-muted); }
+  header.top h2 { margin: 0; }
+
+  .circle-list { display: flex; flex-direction: column; gap: 10px; margin: 6px 0 18px; }
+  .circle-item {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+  }
+  .circle-item .name { font-weight: 600; font-size: 15px; }
+  .circle-item .meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .circle-item .code { font-size: 11px; color: var(--text-faint); }
+
+  .tabs { display: flex; gap: 8px; padding: 12px 18px 0; border-bottom: 1px solid var(--border); }
+  .tab { font-size: 13px; padding: 8px 14px; border-radius: 8px; color: var(--text-muted); cursor: pointer; }
+  .tab.active { background: var(--accent-bg); color: var(--accent-text); font-weight: 600; }
+
+  .post {
+    border-bottom: 1px solid var(--border); padding: 14px 0;
+  }
+  .post-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .post-time { font-size: 12px; color: var(--text-faint); }
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+  .badge.public { background: var(--success-bg); color: var(--success-text); }
+  .badge.private { background: var(--bg-alt); color: var(--text-muted); }
+  .post-body { font-size: 14.5px; line-height: 1.5; margin: 0 0 8px; }
+  .post-actions { display: flex; gap: 18px; align-items: center; }
+  .post-actions .act { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-muted); cursor: pointer; user-select: none; }
+  .post-actions .act.liked { color: var(--danger); }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+  .empty .big { font-size: 32px; margin-bottom: 10px; }
+
+  .fab {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    width: min(480px, 100%); padding: 0 18px; z-index: 10;
+  }
+  .fab button { box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    align-items: flex-end; justify-content: center; z-index: 20;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: var(--bg); width: 100%; max-width: 480px; border-radius: 20px 20px 0 0;
+    padding: 20px 18px 28px; max-height: 85vh; overflow-y: auto;
+  }
+  .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 16px; }
+  .toggle-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .toggle-opt {
+    flex: 1; padding: 10px; text-align: center; border-radius: 10px; border: 1px solid var(--border);
+    font-size: 13px; cursor: pointer; color: var(--text-muted);
+  }
+  .toggle-opt.active { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-text); font-weight: 600; }
+  .close-x { position: absolute; top: 16px; right: 18px; font-size: 20px; color: var(--text-muted); cursor: pointer; }
+
+  .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
+  .banner { background: var(--accent-bg); color: var(--accent-text); font-size: 12.5px; padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div id="install-banner" style="display:none; align-items:center; justify-content:space-between; gap:10px; background:var(--accent-bg); padding:10px 16px; position:sticky; top:0; z-index:8;">
+    <span style="font-size:13px; color:var(--accent-text);">📲 Install Aura for the full app experience</span>
+    <button id="install-btn" class="small" style="width:auto; margin:0; flex-shrink:0;">Install</button>
+  </div>
+
+  <div id="toast-banner" style="display:none; position:fixed; top:14px; left:50%; transform:translateX(-50%); background:var(--accent); color:#fff; padding:10px 18px; border-radius:10px; font-size:13px; z-index:50; max-width:90%; text-align:center; box-shadow:0 4px 14px rgba(0,0,0,0.25);"></div>
+
+  <!-- AUTH: EMAIL SIGN IN / SIGN UP -->
+  <div class="screen active center-screen" id="screen-phone">
+    <div class="logo">Aura</div>
+    <p class="sub">Say it. Stay anonymous. Trusted circles only.</p>
+    <div style="width:100%; text-align:left; margin-top: 10px;">
+      <input type="email" id="email-input" placeholder="you@email.com" autocomplete="email">
+      <input type="password" id="password-input" placeholder="Password (min 6 characters)" autocomplete="current-password">
+      <div class="error" id="phone-error"></div>
+      <button id="send-otp-btn">Sign in</button>
+      <button class="ghost" id="signup-btn" style="margin-top:10px;">Create new account</button>
+    </div>
+  </div>
+
+  <!-- CIRCLES LIST -->
+  <div class="screen" id="screen-circles">
+    <h1>Your circles</h1>
+    <p class="sub" style="margin-bottom:10px;">Posting as <b id="my-anon-name" style="color:var(--text);">...</b> · <span id="edit-name-btn" style="text-decoration:underline; cursor:pointer;">change</span></p>
+    <p class="sub" id="notif-toggle-line" style="cursor:pointer; margin-bottom:18px;">🔔 Notifications: <b id="notif-status">On</b> <span style="text-decoration:underline;">(tap to change)</span></p>
+    <p class="sub">Post honestly. Only people in a circle see it.</p>
+    <div class="circle-list" id="circle-list"></div>
+    <div class="empty" id="circles-empty" style="display:none;">
+      <div class="big">〇</div>
+      No circles yet. Create one or join with a code.
+    </div>
+    <div class="divider">or</div>
+    <input type="text" id="join-code-input" placeholder="Enter invite code">
+    <button class="ghost" id="join-circle-btn">Join circle</button>
+    <div class="divider">or</div>
+    <input type="text" id="new-circle-name" placeholder="New circle name">
+    <button id="create-circle-btn">Create circle</button>
+  </div>
+
+  <!-- FEED -->
+  <div class="screen" id="screen-feed" style="padding-top:0;">
+    <header class="top">
+      <div class="titlewrap">
+        <h2 id="feed-circle-name">Circle</h2>
+        <p id="feed-circle-meta">Loading...</p>
+      </div>
+      <span style="font-size:13px; color:var(--text-muted); cursor:pointer; margin-right:14px;" id="manage-circle-btn">⚙ Manage</span>
+      <span style="font-size:13px; color:var(--text-muted); cursor:pointer;" id="back-to-circles-btn">Circles</span>
+    </header>
+    <div class="tabs">
+      <div class="tab active" data-tab="feed">Feed</div>
+      <div class="tab" data-tab="inbox">Inbox</div>
+    </div>
+    <div style="padding: 6px 4px 0;">
+      <div id="feed-posts"></div>
+      <div class="empty" id="feed-empty" style="display:none;">
+        <div class="big">🚀</div>
+        No posts yet. Be the first to say something.
+      </div>
+    </div>
+  </div>
+
+  <div class="fab" id="fab-compose" style="display:none;">
+    <button id="open-composer-btn">+ Post anonymously</button>
+  </div>
+
+</div>
+
+<!-- COMPOSER MODAL -->
+<div class="modal-backdrop" id="composer-backdrop">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <span class="close-x" id="close-composer-btn">✕</span>
+    <h2>New post</h2>
+    <p class="sub" style="margin-bottom:16px;">Posting anonymously to this circle.</p>
+    <div class="toggle-row">
+      <div class="toggle-opt active" data-vis="public">Public — circle feed</div>
+      <div class="toggle-opt" data-vis="private">Private — chosen people</div>
+    </div>
+    <div id="recipient-picker" style="display:none; margin-bottom:14px;">
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 8px;">Who in the circle can see this?</p>
+      <div id="recipient-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+    <textarea id="post-text" rows="4" placeholder="What's on your mind... (optional if you add a photo or voice note)"></textarea>
+
+    <div id="photo-preview-wrap" style="display:none; margin-bottom:12px;">
+      <img id="photo-preview" style="max-width:100%; border-radius:10px; display:block;">
+      <span id="remove-photo-btn" style="font-size:12px; color:var(--danger); cursor:pointer;">Remove photo</span>
+    </div>
+    <div id="voice-preview-wrap" style="display:none; margin-bottom:12px; display:flex; align-items:center; gap:10px;">
+      <audio id="voice-preview" controls style="flex:1;"></audio>
+      <span id="remove-voice-btn" style="font-size:12px; color:var(--danger); cursor:pointer;">Remove</span>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-bottom:12px;">
+      <button type="button" class="ghost small" id="pick-photo-btn" style="flex:1;">📷 Photo</button>
+      <button type="button" class="ghost small" id="record-voice-btn" style="flex:1;">🎙 Record</button>
+      <input type="file" id="photo-input" accept="image/*" style="display:none;">
+    </div>
+    <p id="record-status" style="display:none; font-size:12px; color:var(--danger); margin:-6px 0 10px;">Recording... tap again to stop</p>
+
+    <div class="error" id="post-error"></div>
+    <button id="submit-post-btn">Post</button>
+  </div>
+</div>
+
+<!-- MANAGE CIRCLE MODAL -->
+<div class="modal-backdrop" id="manage-backdrop">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <span class="close-x" id="close-manage-btn">✕</span>
+    <h2>Circle members</h2>
+    <p class="sub" id="manage-role-note" style="margin-bottom:16px;">Loading...</p>
+    <div id="manage-member-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <div id="history-setting-section" style="display:none; margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+      <p class="sub" style="margin:0 0 8px;">New members joining this circle:</p>
+      <div class="toggle-row" style="margin-bottom:0;">
+        <div class="toggle-opt" data-history="show">See full history</div>
+        <div class="toggle-opt" data-history="hide">Only see new posts</div>
+      </div>
+    </div>
+    <div id="reports-section" style="display:none; margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+      <h2 style="font-size:16px;">Reported posts</h2>
+      <div id="reports-list" style="display:flex; flex-direction:column; gap:10px; margin-top:10px;"></div>
+    </div>
+    <div id="disband-section" style="display:none; margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+      <button id="disband-circle-btn" style="background:var(--danger);">Disband circle</button>
+    </div>
+  </div>
+</div>
+
+<!-- FORWARD MODAL -->
+<div class="modal-backdrop" id="forward-backdrop">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <span class="close-x" id="close-forward-btn">✕</span>
+    <h2>Forward to...</h2>
+    <p class="sub" style="margin-bottom:16px;">Posts anonymously in the circle you choose.</p>
+    <div id="forward-circle-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-backdrop" id="report-backdrop">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <span class="close-x" id="close-report-btn">✕</span>
+    <h2>Report this post</h2>
+    <p class="sub" style="margin-bottom:16px;">Sent to your circle's leader/co-leaders for review.</p>
+    <div id="report-reason-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDuSmsITJTgo_wiQJ9uQwu7YZrmBHcqy8M",
+  authDomain: "aura-4a9c4.firebaseapp.com",
+  projectId: "aura-4a9c4",
+  storageBucket: "aura-4a9c4.firebasestorage.app",
+  messagingSenderId: "101767883221",
+  appId: "1:101767883221:web:02057b76a307f0a51d355c"
+};
+firebase.initializeApp(firebaseConfig);
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+const auth = firebase.auth();
+const db = firebase.firestore();
+const CLOUDINARY_CLOUD_NAME = 'otabnmm9';
+const CLOUDINARY_PRESET = 'aurauploads3';
+async function uploadToCloudinary(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, {
+    method: 'POST', body: formData
+  });
+  if (!res.ok) throw new Error('Upload failed (' + res.status + ')');
+  const data = await res.json();
+  return data.secure_url;
+}
+
+let currentUser = null;
+let currentCircle = null;
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function setErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.toggle('show', !!msg);
+}
+function randomName() {
+  const adjectives = ['Quiet','Bright','Calm','Bold','Gentle','Swift','Kind','Wild'];
+  const nouns = ['Falcon','River','Ember','Cloud','Maple','Comet','Harbor','Sage'];
+  return adjectives[Math.floor(Math.random()*adjectives.length)] + nouns[Math.floor(Math.random()*nouns.length)] + Math.floor(Math.random()*90+10);
+}
+function genCode() {
+  return Math.random().toString(36).substring(2,8).toUpperCase();
+}
+function timeAgo(ts) {
+  if (!ts) return 'just now';
+  const s = Math.floor((Date.now() - ts.toDate().getTime())/1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+// ---- AUTH ----
+function getEmailPass() {
+  return {
+    email: document.getElementById('email-input').value.trim(),
+    password: document.getElementById('password-input').value
+  };
+}
+function validateEmailPass(email, password) {
+  if (!email || !email.includes('@')) return 'Enter a valid email address.';
+  if (!password || password.length < 6) return 'Password must be at least 6 characters.';
+  return '';
+}
+
+document.getElementById('send-otp-btn').onclick = async () => {
+  const { email, password } = getEmailPass();
+  const v = validateEmailPass(email, password);
+  setErr('phone-error', '');
+  if (v) { setErr('phone-error', v); return; }
+  const btn = document.getElementById('send-otp-btn');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (e) {
+    setErr('phone-error', e.code === 'auth/invalid-credential' ? 'No account with that email/password. Try "Create new account".' : (e.message || 'Sign in failed.'));
+  }
+  btn.disabled = false; btn.textContent = 'Sign in';
+};
+
+document.getElementById('signup-btn').onclick = async () => {
+  const { email, password } = getEmailPass();
+  const v = validateEmailPass(email, password);
+  setErr('phone-error', '');
+  if (v) { setErr('phone-error', v); return; }
+  const btn = document.getElementById('signup-btn');
+  btn.disabled = true; btn.textContent = 'Creating...';
+  try {
+    await auth.createUserWithEmailAndPassword(email, password);
+  } catch (e) {
+    setErr('phone-error', e.code === 'auth/email-already-in-use' ? 'That email already has an account. Try "Sign in" instead.' : (e.message || 'Could not create account.'));
+  }
+  btn.disabled = false; btn.textContent = 'Create new account';
+};
+
+async function ensureUserProfile(user) {
+  const ref = db.collection('users').doc(user.uid);
+  const doc = await ref.get();
+  if (!doc.exists) {
+    await ref.set({ anonName: randomName(), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  }
+}
+
+async function loadMyName() {
+  const el = document.getElementById('my-anon-name');
+  try {
+    const doc = await db.collection('users').doc(currentUser.uid).get();
+    el.textContent = (doc.exists && doc.data().anonName) || 'Anonymous';
+  } catch (e) {
+    el.textContent = 'Anonymous';
+  }
+}
+
+document.getElementById('edit-name-btn').onclick = async () => {
+  const current = document.getElementById('my-anon-name').textContent;
+  const next = prompt('Choose the name others see (still anonymous — no real info):', current === '...' ? '' : current);
+  if (!next || !next.trim()) return;
+  await db.collection('users').doc(currentUser.uid).set({ anonName: next.trim() }, { merge: true });
+  loadMyName();
+};
+
+// ---- NOTIFICATIONS ----
+function getNotifPref() {
+  try { return localStorage.getItem('aura_notif') !== 'off'; } catch (e) { return true; }
+}
+function setNotifPref(on) {
+  try { localStorage.setItem('aura_notif', on ? 'on' : 'off'); } catch (e) {}
+}
+function renderNotifStatus() {
+  const el = document.getElementById('notif-status');
+  if (el) el.textContent = getNotifPref() ? 'On' : 'Off';
+}
+document.getElementById('notif-toggle-line').onclick = () => {
+  const next = !getNotifPref();
+  setNotifPref(next);
+  renderNotifStatus();
+  if (next && window.Notification && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+};
+function showToast(msg) {
+  const el = document.getElementById('toast-banner');
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+function notifyNewPost() {
+  const msg = 'New post in ' + (currentCircle.name || 'your circle');
+  if (window.Notification && Notification.permission === 'granted') {
+    try { new Notification('Aura', { body: msg }); return; } catch (e) {}
+  }
+  showToast(msg);
+}
+
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    currentUser = user;
+    db.collection('users').doc(user.uid).set({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }).catch(() => {});
+    try {
+      if (localStorage.getItem('aura_pending_install') === '1') {
+        db.collection('users').doc(user.uid).set({ installedPWA: true, installedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        localStorage.removeItem('aura_pending_install');
+      }
+    } catch (e) {}
+    history.replaceState({ screen: 'circles' }, '', '#circles');
+    show('screen-circles');
+    loadCircles();
+    ensureUserProfile(user).catch(e => console.error('Profile save failed:', e));
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').style.display = 'none';
+  if (currentUser) {
+    db.collection('users').doc(currentUser.uid).set({ installedPWA: true, installedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  } else {
+    try { localStorage.setItem('aura_pending_install', '1'); } catch (e) {}
+  }
+});
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const banner = document.getElementById('install-banner');
+  if (banner) banner.style.display = 'flex';
+});
+document.getElementById('install-btn').onclick = async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.getElementById('install-banner').style.display = 'none';
+};
+
+function goToCirclesScreen() {
+  if (unsubscribeFeed) unsubscribeFeed();
+  document.getElementById('fab-compose').style.display = 'none';
+  loadCircles();
+  show('screen-circles');
+}
+
+window.addEventListener('popstate', (event) => {
+  const state = event.state;
+  if (!state || state.screen === 'circles') {
+    goToCirclesScreen();
+  }
+});
+
+// ---- CIRCLES ----
+async function loadCircles() {
+  loadMyName();
+  renderNotifStatus();
+  const listEl = document.getElementById('circle-list');
+  const emptyEl = document.getElementById('circles-empty');
+  listEl.innerHTML = '<div class="loading">Loading circles...</div>';
+  let snap;
+  try {
+    snap = await db.collection('circles').where('members', 'array-contains', currentUser.uid).get();
+  } catch (e) {
+    listEl.innerHTML = '<div class="loading" style="color:var(--danger);">Could not load circles: ' + (e.message || 'unknown error') + '</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  if (snap.empty) {
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  snap.forEach(doc => {
+    const c = doc.data();
+    const item = document.createElement('div');
+    item.className = 'circle-item';
+    item.innerHTML = `<div><div class="name">${c.name}</div><div class="meta">${(c.members||[]).length} members</div></div><div class="code">${c.inviteCode}</div>`;
+    item.onclick = () => openCircle(doc.id, c);
+    listEl.appendChild(item);
+  });
+}
+
+document.getElementById('create-circle-btn').onclick = async () => {
+  const name = document.getElementById('new-circle-name').value.trim();
+  if (!name) return;
+  const code = genCode();
+  const ref = await db.collection('circles').add({
+    name, inviteCode: code, members: [currentUser.uid],
+    creatorId: currentUser.uid, coLeaders: [],
+    memberJoinedAt: { [currentUser.uid]: firebase.firestore.FieldValue.serverTimestamp() },
+    hideHistoryForNewJoiners: false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  document.getElementById('new-circle-name').value = '';
+  loadCircles();
+};
+
+document.getElementById('join-circle-btn').onclick = async () => {
+  const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+  if (!code) return;
+  const snap = await db.collection('circles').where('inviteCode', '==', code).limit(1).get();
+  if (snap.empty) { alert('No circle found with that code.'); return; }
+  const doc = snap.docs[0];
+  await doc.ref.update({
+    members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+    ['memberJoinedAt.' + currentUser.uid]: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  document.getElementById('join-code-input').value = '';
+  loadCircles();
+};
+
+let unsubscribeFeed = null;
+let myBlockedUsers = [];
+
+async function blockAuthor(authorId) {
+  if (!confirm('Block this person? You will no longer see their posts.')) return;
+  await db.collection('users').doc(currentUser.uid).set({
+    blockedUsers: firebase.firestore.FieldValue.arrayUnion(authorId)
+  }, { merge: true });
+  myBlockedUsers.push(authorId);
+  showToast('Blocked. You won\'t see their posts anymore.');
+}
+
+document.getElementById('close-report-btn').onclick = () => {
+  document.getElementById('report-backdrop').classList.remove('show');
+};
+
+function openReportPicker(circleId, postId, post) {
+  const listEl = document.getElementById('report-reason-list');
+  const reasons = ['Harassment or bullying', 'Spam', 'Inappropriate content', 'Something else'];
+  listEl.innerHTML = '';
+  reasons.forEach(reason => {
+    const btn = document.createElement('button');
+    btn.className = 'ghost';
+    btn.textContent = reason;
+    btn.onclick = async () => {
+      await db.collection('circles').doc(circleId).collection('reports').add({
+        postId, reason, postTextSnippet: (post.text || '').slice(0, 100),
+        reporterId: currentUser.uid, status: 'open',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      document.getElementById('report-backdrop').classList.remove('show');
+      showToast('Reported. The circle leader will review it.');
+    };
+    listEl.appendChild(btn);
+  });
+  document.getElementById('report-backdrop').classList.add('show');
+}
+function openCircle(id, data) {
+  currentCircle = { id, ...data };
+  document.getElementById('feed-circle-name').textContent = data.name;
+  document.getElementById('feed-circle-meta').textContent = (data.members||[]).length + ' members · code ' + data.inviteCode;
+  document.getElementById('fab-compose').style.display = 'block';
+  show('screen-feed');
+  history.pushState({ screen: 'feed', circleId: id }, '', '#feed');
+  db.collection('users').doc(currentUser.uid).get().then(doc => {
+    myBlockedUsers = (doc.exists && doc.data().blockedUsers) || [];
+    listenFeed(id);
+  });
+}
+
+document.getElementById('back-to-circles-btn').onclick = () => {
+  history.back();
+};
+
+// ---- MANAGE CIRCLE ----
+document.getElementById('manage-circle-btn').onclick = () => {
+  document.getElementById('manage-backdrop').classList.add('show');
+  loadManageModal();
+};
+document.getElementById('close-manage-btn').onclick = () => {
+  document.getElementById('manage-backdrop').classList.remove('show');
+};
+
+async function loadManageModal() {
+  const listEl = document.getElementById('manage-member-list');
+  const noteEl = document.getElementById('manage-role-note');
+  const disbandSection = document.getElementById('disband-section');
+  listEl.innerHTML = '<span style="font-size:13px;color:var(--text-faint);">Loading...</span>';
+  const doc = await db.collection('circles').doc(currentCircle.id).get();
+  currentCircle = { id: currentCircle.id, ...doc.data() };
+  noteEl.textContent = isLeader() ? "You're the leader of this circle." : (isCoLeader() ? "You're a co-leader of this circle." : "You're a member of this circle.");
+  disbandSection.style.display = isLeader() ? 'block' : 'none';
+
+  const historySection = document.getElementById('history-setting-section');
+  if (isLeader()) {
+    historySection.style.display = 'block';
+    const hideHistory = !!currentCircle.hideHistoryForNewJoiners;
+    historySection.querySelectorAll('[data-history]').forEach(opt => {
+      opt.classList.toggle('active', (opt.dataset.history === 'hide') === hideHistory);
+      opt.onclick = async () => {
+        await db.collection('circles').doc(currentCircle.id).update({ hideHistoryForNewJoiners: opt.dataset.history === 'hide' });
+        loadManageModal();
+      };
+    });
+  } else {
+    historySection.style.display = 'none';
+  }
+  listEl.innerHTML = '';
+  for (const uid of currentCircle.members) {
+    let name = 'Member';
+    try {
+      const udoc = await db.collection('users').doc(uid).get();
+      if (udoc.exists) name = udoc.data().anonName || 'Member';
+    } catch (e) {}
+    const isThisLeader = uid === currentCircle.creatorId;
+    const isThisCoLeader = (currentCircle.coLeaders || []).includes(uid);
+    const roleLabel = isThisLeader ? 'Leader' : (isThisCoLeader ? 'Co-leader' : 'Member');
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;font-size:14px;';
+    let actions = '';
+    if (uid === currentUser.uid) {
+      actions = '<span style="font-size:12px;color:var(--text-faint);">(you)</span>';
+    } else if (isLeader() && !isThisLeader) {
+      actions = `<span style="display:flex;gap:8px;">
+        <button class="small ghost" data-coleader-toggle="${uid}" style="margin:0;">${isThisCoLeader ? 'Remove co-leader' : 'Make co-leader'}</button>
+        <button class="small ghost" data-remove="${uid}" style="margin:0;color:var(--danger);">Remove</button>
+      </span>`;
+    } else if (isCoLeader() && !isThisLeader && !isThisCoLeader) {
+      actions = `<span><button class="small ghost" data-remove="${uid}" style="margin:0;color:var(--danger);">Remove</button></span>`;
+    }
+    row.innerHTML = `<span>${name} <span style="font-size:11px;color:var(--text-faint);">· ${roleLabel}</span></span>${actions}`;
+    listEl.appendChild(row);
+  }
+  listEl.querySelectorAll('[data-coleader-toggle]').forEach(btn => {
+    btn.onclick = async () => {
+      const uid = btn.dataset.coleaderToggle;
+      const isCur = (currentCircle.coLeaders || []).includes(uid);
+      await db.collection('circles').doc(currentCircle.id).update({
+        coLeaders: isCur ? firebase.firestore.FieldValue.arrayRemove(uid) : firebase.firestore.FieldValue.arrayUnion(uid)
+      });
+      loadManageModal();
+    };
+  });
+  listEl.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.onclick = async () => {
+      const uid = btn.dataset.remove;
+      if (!confirm('Remove this member from the circle?')) return;
+      await db.collection('circles').doc(currentCircle.id).update({
+        members: firebase.firestore.FieldValue.arrayRemove(uid),
+        coLeaders: firebase.firestore.FieldValue.arrayRemove(uid)
+      });
+      loadManageModal();
+    };
+  });
+
+  const reportsSection = document.getElementById('reports-section');
+  const reportsList = document.getElementById('reports-list');
+  if (canManage()) {
+    reportsSection.style.display = 'block';
+    reportsList.innerHTML = '<span style="font-size:13px;color:var(--text-faint);">Loading reports...</span>';
+    const reportsSnap = await db.collection('circles').doc(currentCircle.id).collection('reports')
+      .where('status', '==', 'open').get();
+    if (reportsSnap.empty) {
+      reportsList.innerHTML = '<span style="font-size:13px;color:var(--text-faint);">No open reports.</span>';
+    } else {
+      reportsList.innerHTML = '';
+      reportsSnap.forEach(rdoc => {
+        const r = rdoc.data();
+        const row = document.createElement('div');
+        row.style.cssText = 'border:1px solid var(--border); border-radius:10px; padding:10px 12px;';
+        row.innerHTML = `
+          <p style="font-size:12px; color:var(--text-muted); margin:0 0 4px;">${r.reason}</p>
+          <p style="font-size:13px; margin:0 0 8px;">"${escapeHtml(r.postTextSnippet || '(no text)')}"</p>
+          <div style="display:flex; gap:8px;">
+            <button class="small ghost" data-delete-reported="${r.postId}" data-report-id="${rdoc.id}" style="margin:0;color:var(--danger);">Delete post</button>
+            <button class="small ghost" data-dismiss-report="${rdoc.id}" style="margin:0;">Dismiss</button>
+          </div>`;
+        row.querySelector('[data-delete-reported]').onclick = async () => {
+          await db.collection('circles').doc(currentCircle.id).collection('posts').doc(r.postId).delete().catch(() => {});
+          await db.collection('circles').doc(currentCircle.id).collection('reports').doc(rdoc.id).update({ status: 'resolved' });
+          loadManageModal();
+        };
+        row.querySelector('[data-dismiss-report]').onclick = async () => {
+          await db.collection('circles').doc(currentCircle.id).collection('reports').doc(rdoc.id).update({ status: 'dismissed' });
+          loadManageModal();
+        };
+        reportsList.appendChild(row);
+      });
+    }
+  } else {
+    reportsSection.style.display = 'none';
+  }
+}
+
+document.getElementById('disband-circle-btn').onclick = async () => {
+  if (!confirm('Disband this circle permanently? This cannot be undone.')) return;
+  await db.collection('circles').doc(currentCircle.id).delete();
+  document.getElementById('manage-backdrop').classList.remove('show');
+  history.replaceState({ screen: 'circles' }, '', '#circles');
+  goToCirclesScreen();
+};
+
+function listenFeed(circleId) {
+  if (unsubscribeFeed) unsubscribeFeed();
+  let firstSnapshot = true;
+  const postsEl = document.getElementById('feed-posts');
+  const emptyEl = document.getElementById('feed-empty');
+  unsubscribeFeed = db.collection('circles').doc(circleId).collection('posts')
+    .orderBy('createdAt', 'desc').limit(50)
+    .onSnapshot(snap => {
+      if (!firstSnapshot) {
+        snap.docChanges().forEach(change => {
+          if (change.type === 'added') {
+            const p = change.doc.data();
+            const visibleToMe = p.visibility === 'public' || p.authorId === currentUser.uid || (p.recipientIds || []).includes(currentUser.uid);
+            if (visibleToMe && p.authorId !== currentUser.uid) notifyNewPost();
+          }
+        });
+      }
+      firstSnapshot = false;
+      postsEl.innerHTML = '';
+      const myJoinedAt = (currentCircle.memberJoinedAt || {})[currentUser.uid];
+      const docs = snap.docs.filter(d => {
+        const p = d.data();
+        if ((myBlockedUsers || []).includes(p.authorId)) return false;
+        if (p.authorId === currentUser.uid) return true;
+        if (currentCircle.hideHistoryForNewJoiners && myJoinedAt && p.createdAt && p.createdAt.toMillis() < myJoinedAt.toMillis()) return false;
+        if (p.visibility === 'public') return true;
+        if (p.visibility === 'private' && (p.recipientIds || []).includes(currentUser.uid)) return true;
+        return false;
+      });
+      emptyEl.style.display = docs.length ? 'none' : 'block';
+      docs.forEach(d => {
+        const p = d.data();
+        const reactions = p.reactions || {};
+        const canDelete = p.authorId === currentUser.uid || canManage();
+        const reactionsHtml = REACTIONS.map(emoji => {
+          const arr = reactions[emoji] || [];
+          const mine = arr.includes(currentUser.uid);
+          return `<span class="act ${mine ? 'liked' : ''}" data-emoji="${emoji}">${emoji} ${arr.length || ''}</span>`;
+        }).join('');
+        const el = document.createElement('div');
+        el.className = 'post';
+        el.innerHTML = `
+          <div class="post-top">
+            <span class="post-time">Anonymous · ${timeAgo(p.createdAt)}</span>
+            <span class="badge ${p.visibility}">${p.visibility === 'public' ? 'Public' : 'Private'}</span>
+          </div>
+          ${p.text ? `<p class="post-body">${escapeHtml(p.text)}</p>` : ''}
+          ${p.imageUrl ? `<img src="${p.imageUrl}" style="max-width:100%; border-radius:10px; margin-bottom:8px; display:block;">` : ''}
+          ${p.audioUrl ? `<audio src="${p.audioUrl}" controls style="width:100%; margin-bottom:8px;"></audio>` : ''}
+          <div class="post-actions">
+            ${reactionsHtml}
+            <span class="act" data-forward="1">↗ Forward</span>
+            ${p.authorId !== currentUser.uid ? '<span class="act" data-report="1">🚩 Report</span><span class="act" data-block="1">🚫 Block</span>' : ''}
+            ${canDelete ? '<span class="act" data-delete="1" style="margin-left:auto;">🗑</span>' : ''}
+          </div>`;
+        el.querySelectorAll('[data-emoji]').forEach(elm => {
+          elm.onclick = () => toggleReaction(circleId, d.id, elm.dataset.emoji, elm.classList.contains('liked'));
+        });
+        const delBtn = el.querySelector('[data-delete]');
+        if (delBtn) delBtn.onclick = () => deletePost(circleId, d.id);
+        el.querySelector('[data-forward]').onclick = () => openForwardPicker(p);
+        const reportBtn = el.querySelector('[data-report]');
+        if (reportBtn) reportBtn.onclick = () => openReportPicker(circleId, d.id, p);
+        const blockBtn = el.querySelector('[data-block]');
+        if (blockBtn) blockBtn.onclick = () => blockAuthor(p.authorId);
+        postsEl.appendChild(el);
+      });
+    });
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s || '';
+  return div.innerHTML;
+}
+
+const REACTIONS = ['❤️','👍','😂','😢'];
+function isLeader() { return currentCircle && currentCircle.creatorId === currentUser.uid; }
+function isCoLeader() { return currentCircle && (currentCircle.coLeaders || []).includes(currentUser.uid); }
+function canManage() { return isLeader() || isCoLeader(); }
+
+async function toggleReaction(circleId, postId, emoji, currentlyReacted) {
+  const ref = db.collection('circles').doc(circleId).collection('posts').doc(postId);
+  const field = 'reactions.' + emoji;
+  await ref.update({
+    [field]: currentlyReacted ? firebase.firestore.FieldValue.arrayRemove(currentUser.uid) : firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+  });
+}
+
+async function deletePost(circleId, postId) {
+  if (!confirm('Delete this post?')) return;
+  await db.collection('circles').doc(circleId).collection('posts').doc(postId).delete();
+}
+
+// ---- FORWARD ----
+document.getElementById('close-forward-btn').onclick = () => {
+  document.getElementById('forward-backdrop').classList.remove('show');
+};
+
+async function openForwardPicker(post) {
+  const listEl = document.getElementById('forward-circle-list');
+  listEl.innerHTML = '<span style="font-size:13px;color:var(--text-faint);">Loading your circles...</span>';
+  document.getElementById('forward-backdrop').classList.add('show');
+  const snap = await db.collection('circles').where('members', 'array-contains', currentUser.uid).get();
+  const others = snap.docs.filter(d => d.id !== currentCircle.id);
+  if (!others.length) {
+    listEl.innerHTML = '<span style="font-size:13px;color:var(--text-faint);">You\'re not in any other circles yet.</span>';
+    return;
+  }
+  listEl.innerHTML = '';
+  others.forEach(doc => {
+    const c = doc.data();
+    const row = document.createElement('div');
+    row.className = 'circle-item';
+    row.innerHTML = `<div><div class="name">${c.name}</div><div class="meta">${(c.members||[]).length} members</div></div><div class="code">→</div>`;
+    row.onclick = async () => {
+      row.style.opacity = '0.5';
+      await db.collection('circles').doc(doc.id).collection('posts').add({
+        text: post.text || '', imageUrl: post.imageUrl || null, audioUrl: post.audioUrl || null,
+        visibility: 'public', authorId: currentUser.uid, reactions: {},
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      document.getElementById('forward-backdrop').classList.remove('show');
+      showToast('Forwarded to ' + c.name);
+    };
+    listEl.appendChild(row);
+  });
+}
+
+// ---- COMPOSER ----
+let selectedVisibility = 'public';
+let selectedRecipients = [];
+document.getElementById('open-composer-btn').onclick = () => {
+  document.getElementById('composer-backdrop').classList.add('show');
+};
+document.getElementById('close-composer-btn').onclick = () => {
+  document.getElementById('composer-backdrop').classList.remove('show');
+};
+async function loadRecipientPicker() {
+  const listEl = document.getElementById('recipient-list');
+  listEl.innerHTML = '<span style="font-size:12px;color:var(--text-faint);">Loading circle members...</span>';
+  const members = (currentCircle.members || []).filter(uid => uid !== currentUser.uid);
+  if (!members.length) {
+    listEl.innerHTML = '<span style="font-size:12px;color:var(--text-faint);">No other members in this circle yet.</span>';
+    return;
+  }
+  listEl.innerHTML = '';
+  for (const uid of members) {
+    let label = 'Member';
+    try {
+      const doc = await db.collection('users').doc(uid).get();
+      if (doc.exists) label = doc.data().anonName || 'Member';
+    } catch (e) {}
+    const row = document.createElement('label');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:14px;';
+    row.innerHTML = `<input type="checkbox" data-uid="${uid}" style="width:auto;margin:0;"> ${label}`;
+    row.querySelector('input').onchange = (e) => {
+      if (e.target.checked) selectedRecipients.push(uid);
+      else selectedRecipients = selectedRecipients.filter(id => id !== uid);
+    };
+    listEl.appendChild(row);
+  }
+}
+document.querySelectorAll('.toggle-opt').forEach(opt => {
+  opt.onclick = () => {
+    document.querySelectorAll('.toggle-opt').forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+    selectedVisibility = opt.dataset.vis;
+    const picker = document.getElementById('recipient-picker');
+    if (selectedVisibility === 'private') {
+      picker.style.display = 'block';
+      selectedRecipients = [];
+      loadRecipientPicker();
+    } else {
+      picker.style.display = 'none';
+    }
+  };
+});
+// ---- PHOTO & VOICE CAPTURE ----
+let selectedPhotoFile = null;
+let voiceBlob = null;
+let mediaRecorder = null;
+let recordChunks = [];
+
+document.getElementById('pick-photo-btn').onclick = () => document.getElementById('photo-input').click();
+document.getElementById('photo-input').onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  selectedPhotoFile = file;
+  const url = URL.createObjectURL(file);
+  document.getElementById('photo-preview').src = url;
+  document.getElementById('photo-preview-wrap').style.display = 'block';
+};
+document.getElementById('remove-photo-btn').onclick = () => {
+  selectedPhotoFile = null;
+  document.getElementById('photo-input').value = '';
+  document.getElementById('photo-preview-wrap').style.display = 'none';
+};
+
+document.getElementById('record-voice-btn').onclick = async () => {
+  const btn = document.getElementById('record-voice-btn');
+  const statusEl = document.getElementById('record-status');
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    btn.textContent = '🎙 Record';
+    statusEl.style.display = 'none';
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recordChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = (e) => recordChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      voiceBlob = new Blob(recordChunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(voiceBlob);
+      document.getElementById('voice-preview').src = url;
+      document.getElementById('voice-preview-wrap').style.display = 'flex';
+      stream.getTracks().forEach(t => t.stop());
+    };
+    mediaRecorder.start();
+    btn.textContent = '⏹ Stop';
+    statusEl.style.display = 'block';
+  } catch (e) {
+    setErr('post-error', 'Microphone access denied or unavailable.');
+  }
+};
+document.getElementById('remove-voice-btn').onclick = () => {
+  voiceBlob = null;
+  document.getElementById('voice-preview-wrap').style.display = 'none';
+};
+
+function resetComposerMedia() {
+  selectedPhotoFile = null; voiceBlob = null;
+  document.getElementById('photo-input').value = '';
+  document.getElementById('photo-preview-wrap').style.display = 'none';
+  document.getElementById('voice-preview-wrap').style.display = 'none';
+  document.getElementById('post-text').value = '';
+}
+
+document.getElementById('submit-post-btn').onclick = async () => {
+  const text = document.getElementById('post-text').value.trim();
+  setErr('post-error', '');
+  if (!text && !selectedPhotoFile && !voiceBlob) {
+    setErr('post-error', 'Write something, add a photo, or record a voice note.'); return;
+  }
+  if (selectedVisibility === 'private' && selectedRecipients.length === 0) {
+    setErr('post-error', 'Pick at least one person to share this with.'); return;
+  }
+  const btn = document.getElementById('submit-post-btn');
+  btn.disabled = true; btn.textContent = 'Posting...';
+  try {
+    const postData = {
+      text, visibility: selectedVisibility, authorId: currentUser.uid,
+      reactions: {}, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if (selectedVisibility === 'private') postData.recipientIds = selectedRecipients;
+    const docRef = await db.collection('circles').doc(currentCircle.id).collection('posts').add(postData);
+    if (selectedPhotoFile) {
+      const url = await uploadToCloudinary(selectedPhotoFile);
+      await docRef.update({ imageUrl: url });
+    }
+    if (voiceBlob) {
+      const url = await uploadToCloudinary(voiceBlob);
+      await docRef.update({ audioUrl: url });
+    }
+    resetComposerMedia();
+    document.getElementById('composer-backdrop').classList.remove('show');
+  } catch (e) {
+    setErr('post-error', 'Could not post: ' + (e.message || 'unknown error'));
+  }
+  btn.disabled = false; btn.textContent = 'Post';
+};
+</script>
+</body>
+</html>
